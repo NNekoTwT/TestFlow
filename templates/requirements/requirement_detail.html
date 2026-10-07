@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ requirement.title }} · TestFlow{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h2>{{ requirement.title }}</h2>
+        <div class="text-muted small">
+            模块：{{ requirement.module|default:"-" }} · 创建于 {{ requirement.created_at|date:"Y-m-d H:i" }}
+        </div>
+    </div>
+    <div>
+        <button id="generatePointsBtn" class="btn btn-outline-primary">🧩 生成测试点</button>
+        <button id="generateBtn" class="btn btn-primary">⚡ 直接生成测试用例</button>
+        <a class="btn btn-outline-success" href="{% url 'api_export_excel' requirement.pk %}">导出 Excel</a>
+        <a class="btn btn-outline-secondary" href="{% url 'api_export_markdown' requirement.pk %}">导出 Markdown</a>
+    </div>
+</div>
+
+<div id="generateStatus" class="mb-3"></div>
+
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+        <h6 class="text-muted">需求描述</h6>
+        <pre class="mb-0" style="white-space: pre-wrap;">{{ requirement.description }}</pre>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-3" id="detailTabs" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-testcases">测试用例</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-testpoints">测试点</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-review">质量检查</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-similar">相似用例</button></li>
+</ul>
+
+<div class="tab-content">
+    <div class="tab-pane fade show active" id="tab-testcases">
+        <div class="row g-2 mb-3">
+            <div class="col-auto">
+                <select id="filterType" class="form-select form-select-sm">
+                    <option value="">全部类型</option>
+                    <option value="normal">正常</option>
+                    <option value="exception">异常</option>
+                    <option value="boundary">边界</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <select id="filterPriority" class="form-select form-select-sm">
+                    <option value="">全部优先级</option>
+                    <option value="P0">P0</option>
+                    <option value="P1">P1</option>
+                    <option value="P2">P2</option>
+                    <option value="P3">P3</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <select id="filterMethod" class="form-select form-select-sm">
+                    <option value="">全部设计方法</option>
+                    <option value="equivalence_partitioning">等价类</option>
+                    <option value="boundary_value">边界值</option>
+                    <option value="scenario">场景法</option>
+                    <option value="state_transition">状态迁移</option>
+                    <option value="other">其他</option>
+                </select>
+            </div>
+        </div>
+        <div id="testcaseList" class="table-responsive"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-testpoints">
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+            <button id="tpSelectAllBtn" class="btn btn-sm btn-outline-secondary">全选</button>
+            <button id="tpSelectNoneBtn" class="btn btn-sm btn-outline-secondary">取消全选</button>
+            <button id="tpAddBtn" class="btn btn-sm btn-outline-primary">＋ 新增测试点</button>
+            <span id="tpCount" class="ms-auto text-muted small"></span>
+        </div>
+        <div id="testpointList"></div>
+        <div class="mt-3">
+            <button id="tpGenerateCasesBtn" class="btn btn-success" disabled>根据已选测试点生成测试用例（0）</button>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-review">
+        <div id="reviewResult"></div>
+    </div>
+
+    <div class="tab-pane fade" id="tab-similar">
+        <div id="similarList"></div>
+    </div>
+</div>
+
+<!-- 新增 / 编辑测试点 Modal -->
+<div class="modal fade" id="tpModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="tpForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tpModalTitle">新增测试点</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="tpId">
+                    <div class="mb-3">
+                        <label class="form-label">标题</label>
+                        <input type="text" id="tpTitle" class="form-control" required maxlength="255">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">描述</label>
+                        <textarea id="tpDescription" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="form-label">分类</label>
+                            <select id="tpCategory" class="form-select">
+                                <option value="normal">功能测试</option>
+                                <option value="exception">异常测试</option>
+                                <option value="boundary">边界测试</option>
+                                <option value="input_validation">输入校验</option>
+                                <option value="state_transition">状态测试</option>
+                                <option value="permission">权限测试</option>
+                                <option value="data_consistency">数据一致性</option>
+                                <option value="security">安全测试</option>
+                                <option value="performance">性能测试</option>
+                                <option value="compatibility">兼容性测试</option>
+                                <option value="usability">可用性测试</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label">优先级</label>
+                            <select id="tpPriority" class="form-select">
+                                <option value="P0">P0</option>
+                                <option value="P1" selected>P1</option>
+                                <option value="P2">P2</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>window.REQUIREMENT_ID = {{ requirement.id }};</script>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/app.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}新建需求 · TestFlow{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4">新建需求</h2>
+
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" class="card border-0 shadow-sm p-4">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">需求标题 <span class="text-danger">*</span></label>
+                <input type="text" name="title" class="form-control" required
+                       value="{{ form.title }}" placeholder="例如：用户登录">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">所属模块</label>
+                <input type="text" name="module" class="form-control"
+                       value="{{ form.module }}" placeholder="例如：登录模块">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">详细功能需求 <span class="text-danger">*</span></label>
+                <textarea name="description" class="form-control" rows="10" required
+                          placeholder="请尽量详细描述功能、输入约束、业务规则、状态变化等">{{ form.description }}</textarea>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" name="action" value="generate_cases" class="btn btn-primary">⚡ 生成测试用例</button>
+                <button type="submit" name="action" value="generate_points" class="btn btn-outline-primary">🧩 生成测试点</button>
+                <a href="{% url 'requirement_list' %}" class="btn btn-outline-secondary">返回</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

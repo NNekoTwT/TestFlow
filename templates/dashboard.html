@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}首页 · TestFlow{% endblock %}
+{% block content %}
+<h2 class="mb-4">首页 / Dashboard</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">需求总数</div>
+                <div class="display-6 fw-bold">{{ requirement_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">测试用例总数</div>
+                <div class="display-6 fw-bold">{{ testcase_count }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">生成任务数</div>
+                <div class="display-6 fw-bold">{{ generation_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h5>核心流程</h5>
+        <p class="text-muted small">
+            需求输入 → AI 需求解析 → 测试点生成 → 向量相似检索 → 测试用例生成 → 质量评审 → 持久化与导出
+        </p>
+        <a href="{% url 'requirement_create' %}" class="btn btn-primary">➕ 新建需求</a>
+        <a href="{% url 'requirement_list' %}" class="btn btn-outline-primary">查看需求列表</a>
+    </div>
+</div>
+{% endblock %}
